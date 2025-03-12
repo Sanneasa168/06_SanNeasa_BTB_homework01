@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -77,6 +78,35 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    public List<TicketResponse> createBulkTicket(List<TicketCreateRequest> createRequests) {
+        List<TicketResponse> responses = new ArrayList<>();
+        for (TicketCreateRequest createRequest : createRequests) {
+            Ticket newTicket = Ticket.builder()
+                    .id(ticketRepository.getLast()+1)
+                    .passengerName(createRequest.passengerName())
+                    .ticketPrice(createRequest.ticketPrice())
+                    .seatNumber(createRequest.seatNumber())
+                    .ticketDate(createRequest.ticketDate())
+                    .ticketStatus(createRequest.ticketStatus())
+                    .sourceStation(createRequest.sourceStation())
+                    .build();
+            ticketRepository.getTickets().add(newTicket);
+
+            TicketResponse response = TicketResponse.builder()
+                    .id(newTicket.getId())
+                    .passengerName(newTicket.getPassengerName())
+                    .ticketPrice(newTicket.getTicketPrice())
+                    .seatNumber(newTicket.getSeatNumber())
+                    .ticketDate(newTicket.getTicketDate())
+                    .ticketStatus(newTicket.isTicketStatus())
+                    .sourceStation(newTicket.getSourceStation())
+                    .build();
+            responses.add(response);
+        }
+        return responses;
+    }
+
+    @Override
     public List<TicketResponse> getTicketByNamePassenger(String passengerName) {
         List<TicketResponse> ticketResponses=   ticketRepository.getTickets()
                 .stream()
@@ -127,6 +157,33 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    public List<TicketResponse> updatePaymentStatus(List<Integer> ticketId, boolean newPaymentStatus) {
+        List<TicketResponse> updatedTickets = new ArrayList<>();
+        for(Integer id : ticketId){
+            Ticket ticket = ticketRepository.getTickets()
+                    .stream()
+                    .filter(t->t.getId().equals(id))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Ticket with ID " + id + " not found"));
+
+            ticket.setPaymentStatus(newPaymentStatus);
+
+            TicketResponse response = TicketResponse.builder()
+                    .id(ticket.getId())
+                    .passengerName(ticket.getPassengerName())
+                    .ticketPrice(ticket.getTicketPrice())
+                    .seatNumber(ticket.getSeatNumber())
+                    .ticketDate(ticket.getTicketDate())
+                    .ticketStatus(ticket.isTicketStatus())
+                    .sourceStation(ticket.getSourceStation())
+                    .build();
+            updatedTickets.add(response);
+        }
+
+        return  updatedTickets;
+    }
+
+    @Override
     public void deleteById(int id) {
         ticketRepository.getTickets()
                 .stream()
@@ -137,4 +194,5 @@ public class TicketServiceImpl implements TicketService {
                         ()-> new IllegalArgumentException("ID ticket not found ??")
                 );
     }
+
 }

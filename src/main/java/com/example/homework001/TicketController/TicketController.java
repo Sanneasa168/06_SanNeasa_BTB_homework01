@@ -6,6 +6,7 @@ import com.example.homework001.dto.TicketResponse;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,11 @@ public class TicketController {
     @PostMapping
     TicketResponse createNewTicket(TicketCreateRequest ticketCreateRequest) {
          return ticketService.createTicket(ticketCreateRequest);
+     }
+     @PostMapping("/bulk")
+     public ResponseEntity<List<TicketResponse>> createNewTicketBulk(@RequestBody List<TicketCreateRequest> ticketCreateRequests) {
+         List<TicketResponse> response = ticketService.createBulkTicket(ticketCreateRequests);
+          return new ResponseEntity<>(response,HttpStatus.CREATED);
      }
 
      @GetMapping
@@ -43,12 +49,19 @@ public class TicketController {
         return ticketService.updateById(id,ticketUpdateRequest);
      }
 
+     @PutMapping
+     public ResponseEntity<List<TicketResponse>> bulkUpdatePaymentStatus(
+             @RequestBody List<Integer> ticketIds,
+             @RequestParam boolean newPaymentStatus){
+         List<TicketResponse> updatedTickets = ticketService.updatePaymentStatus(ticketIds,newPaymentStatus);
+         return new ResponseEntity<>(updatedTickets,HttpStatus.OK);
+
+     }
+
      @ResponseStatus(HttpStatus.NO_CONTENT)
      @DeleteMapping("/{ticket-id}")
      void deleteTicketById(@PathVariable("ticket-id") int id){
         ticketService.deleteById(id);
      }
-
-
 
 }
